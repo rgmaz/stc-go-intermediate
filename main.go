@@ -6,51 +6,32 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"sync"
 )
-
-func add(numbers []int) int {
-	total := 0
-	for _, n := range numbers {
-		total += n
-	}
-
-	return total
-}
 
 func main() {
 	sc := bufio.NewScanner(os.Stdin)
 	sc.Scan()
-	n, _ := strconv.Atoi(sc.Text())
-	sc.Scan()
-
 	fields := strings.Fields(sc.Text())
-	nums := make([]int, n)
-	for i, f := range fields {
-		nums[i], _ = strconv.Atoi(f)
+	a := make(chan int)
+	b := make(chan int)
+	// Producer
+	go func() {
+		defer close(a)
+		for _, f := range fields {
+			n, _ := strconv.Atoi(f)
+			a <- n
+		}
+	}()
+	// Squarer
+	go func() {
+		defer close(b)
+		for n := range a {
+			b <- (n * n)
+		}
+	}()
+	sum := 0
+	for v := range b {
+		sum += v
 	}
-	var wg sync.WaitGroup
-	var total int
-	var mu sync.Mutex
-
-	subLen := n / 4
-	chunks := [][]int{
-		nums[:subLen],
-		nums[subLen : subLen*2],
-		nums[subLen*2 : subLen*3],
-		nums[subLen*3:],
-	}
-	for _, i := range chunks {
-		wg.Add(1)
-		go func(n []int) {
-			defer wg.Done()
-
-			subTotal := add(n)
-			mu.Lock()
-			total += subTotal
-			mu.Unlock()
-		}(i)
-	}
-	wg.Wait()
-	fmt.Println(total) // replace with the real total
+	fmt.Println(sum)
 }
