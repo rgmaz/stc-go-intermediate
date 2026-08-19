@@ -8,6 +8,14 @@ import (
 	"sync"
 )
 
+func add(numbers []int) int {
+	total := 0
+	for _, n := range numbers {
+		total += n
+	}
+	return total
+}
+
 func main() {
 	sc := bufio.NewScanner(os.Stdin)
 	sc.Buffer(make([]byte, 1024*1024), 1024*1024)
@@ -23,26 +31,23 @@ func main() {
 	var wg sync.WaitGroup
 	total := 0
 
-	subLen := len(nums) / 4
-	tasks := [][]int{
+	subLen := n / 4
+	chunks := [][]int{
 		nums[:subLen],
 		nums[subLen : subLen*2],
 		nums[subLen*2 : subLen*3],
 		nums[subLen*3:],
 	}
-
-	for _, task := range tasks {
+	for _, i := range chunks {
 		wg.Add(1)
-		go func() {
+		go func(n []int) {
 			defer wg.Done()
-			sum := 0
-			for _, num := range task {
-				sum += num
-			}
+
+			subTotal := add(n)
 			mu.Lock()
-			total += sum
+			total += subTotal
 			mu.Unlock()
-		}()
+		}(i)
 	}
 	// TODO: split `nums` into 4 chunks and launch a goroutine per chunk.
 	// Each goroutine should sum its chunk and add the result into `total`,
