@@ -30,7 +30,7 @@ func main() {
 	sc.Scan()
 	n, _ := strconv.Atoi(sc.Text())
 	var c Counter
-	for range n {
+	for _ = range n {
 		c.Inc()
 	}
 }
